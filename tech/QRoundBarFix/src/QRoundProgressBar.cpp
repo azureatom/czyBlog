@@ -216,7 +216,6 @@ void QRoundProgressBar::drawBase(QPainter &p, const QRectF &baseRect,const QRect
     {
         QPainterPath dataPath;
         dataPath.setFillRule(Qt::OddEvenFill);
-        dataPath.moveTo(baseRect.center());
         dataPath.addEllipse(baseRect);
         dataPath.addEllipse(innerRect);
         p.setPen(QPen(palette().shadow().color(), m_outlinePenWidth));
@@ -251,45 +250,49 @@ void QRoundProgressBar::drawValue(QPainter &p
     if (value == m_min)
         return;
 
-    // for Line style
-    if (m_barStyle == StyleLine)
+    switch(m_barStyle)
     {
+    case StyleLine:
+    {
+        p.save();
         p.setPen(QPen(palette().highlight().color(), m_dataPenWidth));
         p.setBrush(Qt::NoBrush);
         p.drawArc(baseRect.adjusted(m_outlinePenWidth/2, m_outlinePenWidth/2, -m_outlinePenWidth/2, -m_outlinePenWidth/2),
                   m_nullPosition * 16,
                   -arcLength * 16);
-        return;
+        p.restore();
+        break;
     }
-
-    // for Pie and Donut styles
-    QPainterPath dataPath;
-    dataPath.setFillRule(Qt::WindingFill);
-    dataPath.moveTo(baseRect.center());
-    dataPath.arcTo(baseRect, m_nullPosition, -arcLength);
-    if(m_barStyle == StylePie)
+    case StylePie:
     {
-
-        // pie segment outer
+        QPainterPath dataPath;
+        dataPath.setFillRule(Qt::WindingFill);
+        dataPath.moveTo(baseRect.center());
+        dataPath.arcTo(baseRect, m_nullPosition, -arcLength);
         dataPath.lineTo(baseRect.center());
 
+        p.save();
         p.setPen(QPen(palette().shadow().color(), m_dataPenWidth));
+        p.setBrush(palette().highlight());
+        p.drawPath(dataPath);
+        p.restore();
+        break;
     }
-    if(m_barStyle == StyleDonut)
+    case StyleDonut:
     {
-        // draw dount outer
-        QPointF currentPoint = dataPath.currentPosition();
-        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * m_innerOuterRate);
-        dataPath.lineTo(currentPoint);
-        dataPath.moveTo(baseRect.center());
-        dataPath.arcTo(innerRect, m_nullPosition-arcLength, arcLength);
-        currentPoint = dataPath.currentPosition();
-        currentPoint = baseRect.center() + ((currentPoint - baseRect.center()) * (2-m_innerOuterRate));
-        dataPath.lineTo(currentPoint);
-        p.setPen(Qt::NoPen);
+        const float circleWidth = (baseRect.width() - innerRect.width()) / 2;
+        QRectF arcRect = baseRect;
+        arcRect.adjust(circleWidth / 2, circleWidth / 2, -circleWidth / 2, -circleWidth / 2);
+
+        p.save();
+        p.setPen(QPen(palette().highlight(), circleWidth, Qt::SolidLine, Qt::RoundCap, Qt::BevelJoin));
+        p.drawArc(arcRect, 16 * m_nullPosition, -16 * arcLength);
+        p.restore();
+        break;
     }
-    p.setBrush(palette().highlight());
-    p.drawPath(dataPath);
+    default:
+        break;
+    }
 }
 
 void QRoundProgressBar::calculateInnerRect(const QRectF &/*baseRect*/, double outerRadius, QRectF &innerRect, double &innerRadius)
@@ -322,14 +325,26 @@ void QRoundProgressBar::drawText(QPainter &p, const QRectF &innerRect, double in
     if (m_format.isEmpty())
         return;
 
-    // !!! to revise
     QFont f(font());
-    f.setPixelSize(innerRadius * qMax(0.05, (0.35 - (double)m_decimals * 0.08)));
+    int minPixelSize = innerRadius * qMax(0.05, (0.35 - (double)m_decimals * 0.08));
+    if(f.pixelSize() < minPixelSize)
+    {
+        //revise font size
+        f.setPixelSize(minPixelSize);
+    }
     p.setFont(f);
 
-    QRectF textRect(innerRect);
+    QRectF textRect(innerRect.x(), innerRect.y() + innerRadius * 0.3, innerRadius, innerRadius * 0.3);
     p.setPen(palette().text().color());
     p.drawText(textRect, Qt::AlignCenter, valueToText(value));
+
+    QRectF percentageTextRect(textRect);
+    percentageTextRect.adjust(0, textRect.height(), 0, textRect.height());
+    percentageTextRect.setHeight(innerRadius * 0.2);
+    p.setPen(QColor(0x9C9F9E));
+    f.setPixelSize(18);
+    p.setFont(f);
+    p.drawText(percentageTextRect, Qt::AlignCenter, "%");
 }
 
 QString QRoundProgressBar::valueToText(double value) const
