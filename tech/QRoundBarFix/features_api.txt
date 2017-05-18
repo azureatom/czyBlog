@@ -1,0 +1,110 @@
+http://blog.csdn.net/liang19890820
+QRoundProgressBar类能够实现一个圆形进度条，继承自QWidget，并且有和QProgressBar类似的API接口。
+
+主要有以下特性：
+圆形进度条控件
+高度可定制的
+源码下载：
+
+src目录里包含了两个主要的文件QRoundProgressBar.h和QRoundProgressBar.cpp，可以直接使用，也可以预编译为库。
+
+test目录中则包含了一个使用的示例，可以直接运行。
+
+风格
+QRoundProgressBar包含三种风格。
+枚举QRoundProgressBarBar::Style：
+常量	描述
+QRoundProgressBar::StyleDonut	圆环风格（环绕文本）
+QRoundProgressBar::StylePie	饼状风格（文本位于扇形中央）
+QRoundProgressBar::StyleLine	线状风格（细线环绕文本）
+
+颜色
+通常情况下，QRoundProgressBar使用调色板（palette）和字体（font）属性来定义外观。
+可以考虑使用QPalette中QPalette::ColorRole的以下成员：
+常量	描述
+QPalette::Window	设置整个部件的背景（正常情况下，应该设置为：Qt::NoBrush）
+QPalette::Base	未填充进度区域的背景（如果需要透明，应该设置为：Qt::NoBrush）
+QPalette::AlternateBase	文本显示所在的中间圆环的背景（为圆环风格）
+QPalette::Shadow	未填充区域的前景色（即：边框色）
+QPalette::Highlight	填充进度条区域的背景色
+QPalette::Text	在中心显示的文本色
+
+字体
+通过setFont()为文本设置字体。
+默认情况下，将自动调整字体大小，以适应部件的内部圆环。
+
+
+公有函数
+
+double nullPosition() 
+返回最小值的位置（用角度表示）。
+
+void setNullPosition(double position); 
+设置最小值的位置，position为圆上最小值的位置（用角度表示）。
+
+void setBarStyle(BarStyle style); 
+设置显示风格。
+
+BarStyle barStyle() const; 
+返回显示风格。
+
+void setOutlinePenWidth(double penWidth); 
+设置圆环轮廓线的画笔宽度（像素）。
+
+double outlinePenWidth() const; 
+返回圆环轮廓线的画笔宽度。
+
+void setDataPenWidth(double penWidth); 
+设置圆环数据圆笔的宽度。
+
+double dataPenWidth() const; 
+返回圆环数据圆笔的宽度。
+
+void setDataColors(const QGradientStops& stopPoints); 
+设置可见数据的渐变色。
+
+注意：此函数会覆盖palette()，来动态创建渐变。
+
+void setFormat(const QString& format); 
+定义用于生成当前的文本字符串。
+
+注意：如果没有设置格式，将不会显示文本。
+
+void resetFormat(); 
+重置格式字符串为空字符串，将不会显示文本。
+
+QString format() const; 
+返回用于生成当前文本的格式。
+
+void setDecimals(int count); 
+设置显示小数点后的位数（默认为1）。
+
+int decimals() const; 
+返回显示小数点后的位数。
+
+double value() const; 
+返回当前显示在控件上的值。
+
+double minimum() const; 
+返回允许值范围的最小值。
+
+double maximum() const; 
+返回允许值范围的最大值。
+
+
+共有槽函数
+
+void setRange(double min, double max); 
+设置允许值范围。
+
+void setMinimum(double min); 
+设置允许值范围的最小值。
+
+void setMaximum(double max); 
+设置允许值范围的最大值。
+
+void setValue(double val); 
+设置当前显示在控件上的值（浮点数），必须在最小值和最大值之间。
+
+void setValue(int val); 
+设置当前显示在控件上的值（整数），必须在最小值和最大值之间。
